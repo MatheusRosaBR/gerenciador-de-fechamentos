@@ -110,9 +110,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, profileD
     }
   }, [isOpen, profileData]);
 
+  const formatPhone = (value: string) => {
+    value = value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+    if (value.length > 2) value = value.replace(/^(\d{2})(\d)/, '($1) $2');
+    if (value.length > 7) value = value.replace(/(\d{5})(\d)/, '$1-$2');
+    return value;
+  };
+
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'phone') {
+      setFormData(prev => ({ ...prev, [name]: formatPhone(value) }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleToggleTwoFactor = () => {
@@ -411,13 +423,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, profileD
                       onChange={handleProfileChange}
                       disabled={!isPhoneEditing}
                     >
-                      <button
-                        type="button"
-                        onClick={() => setIsPhoneEditing(!isPhoneEditing)}
-                        className="text-xs text-brand-accent hover:text-brand-accent/80 font-medium whitespace-nowrap px-3 py-1 bg-brand-accent/10 hover:bg-brand-accent/20 rounded-md transition-colors h-full flex items-center"
-                      >
-                        {isPhoneEditing ? 'Cancelar' : 'Alterar Telefone'}
-                      </button>
+                      {isPhoneEditing ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setIsPhoneEditing(false)}
+                            className="bg-brand-accent hover:bg-brand-accent/90 text-white text-xs font-bold px-3 py-1 rounded-md transition-colors h-full flex items-center"
+                          >
+                            Salvar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsPhoneEditing(false);
+                              setFormData(prev => ({ ...prev, phone: profileData.phone }));
+                            }}
+                            className="text-xs text-red-500 hover:text-red-600 font-medium px-2 py-1 transition-colors h-full flex items-center"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsPhoneEditing(true)}
+                          className="text-xs text-brand-accent hover:text-brand-accent/80 font-medium whitespace-nowrap px-3 py-1 bg-brand-accent/10 hover:bg-brand-accent/20 rounded-md transition-colors h-full flex items-center"
+                        >
+                          Alterar Telefone
+                        </button>
+                      )}
                     </ProfileInputField>
                   </div>
 
