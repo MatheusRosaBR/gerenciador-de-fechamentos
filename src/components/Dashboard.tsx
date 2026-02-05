@@ -18,8 +18,9 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ contracts, goal, goalPeriod, onOpenGoalSettings, onOpenCommissionDetails }) => {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6 animate-fade-in">
+      {/* 1. Header KPIs Row - Full Width */}
+      <div className="w-full">
         <KPIs
           contracts={contracts}
           goal={goal}
@@ -27,14 +28,23 @@ const Dashboard: React.FC<DashboardProps> = ({ contracts, goal, goalPeriod, onOp
           onOpenGoalSettings={onOpenGoalSettings}
           onOpenCommissionDetails={onOpenCommissionDetails}
         />
-        <div className="space-y-6">
-          <UpcomingPayments items={contracts} title="Próximos Recebimentos (Locação)" />
-          <ClosingsByMonthChart items={contracts} />
-        </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ReceiptStatusChart items={contracts} />
-        <ContractStatusChart contracts={contracts} />
+
+      {/* 2. Main Analytics Row - Asymmetric Split (8/4) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 space-y-6">
+          {/* Primary Chart */}
+          <ClosingsByMonthChart items={contracts} />
+
+          {/* Actionable List */}
+          <UpcomingPayments items={contracts} title="Próximos Recebimentos" />
+        </div>
+
+        <div className="lg:col-span-4 space-y-6">
+          {/* Secondary Charts */}
+          <ContractStatusChart contracts={contracts} />
+          <ReceiptStatusChart items={contracts} />
+        </div>
       </div>
     </div>
   );

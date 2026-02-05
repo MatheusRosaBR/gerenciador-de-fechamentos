@@ -1,7 +1,7 @@
 import React from 'react';
 import { SaleContract, ReceiptStatus } from '../types';
 import { formatCurrencyBRL } from '../utils/formatters';
-import { TargetIcon, CurrencyDollarIcon, CollectionIcon, ChartPieIcon, CogIcon, CheckCircleIcon, InformationCircleIcon, BanknotesIcon } from './IconComponents';
+import { TargetIcon, CheckCircleIcon, CurrencyDollarIcon, CollectionIcon, ChartPieIcon, CogIcon, InformationCircleIcon } from './IconComponents';
 
 interface SalesKPIsProps {
   sales: SaleContract[];
@@ -11,82 +11,54 @@ interface SalesKPIsProps {
   onOpenCommissionDetails: () => void;
 }
 
-const ProgressKpiCard: React.FC<{ meta: number; realizado: number; progress: number; period: string; onOpenSettings: () => void; }> = ({ meta, realizado, progress, period, onOpenSettings }) => (
-  <div className="glass-card p-6 rounded-xl flex flex-col justify-between text-[var(--color-text-primary)]">
-    <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">
-          Progresso da Meta {period && <span className="text-xs">({period})</span>}
-        </h3>
-        <button onClick={onOpenSettings} className="text-[var(--color-text-secondary)] hover:text-brand-accent transition-colors" title="Definir meta">
-          <CogIcon className="w-5 h-5" />
+const KPICard: React.FC<{
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  subValue?: string;
+  color?: string;
+  onClick?: () => void;
+  actionIcon?: React.ReactNode
+}> = ({ icon, label, value, subValue, color = 'text-[var(--color-text-primary)]', onClick, actionIcon }) => (
+  <div className="glass-card p-5 rounded-lg flex items-start gap-4">
+    <div className={`p-3 rounded-lg ${color.replace('text-', 'bg-').split('-')[0] + '-' + color.replace('text-', 'bg-').split('-')[1] + '/10'}`}>
+      {React.cloneElement(icon as React.ReactElement, { className: `w-6 h-6 ${color}` })}
+    </div>
+    <div className="flex-1">
+      <div className="flex justify-between items-start">
+        <p className="text-sm text-[var(--color-text-secondary)] font-medium">{label}</p>
+        {onClick && (
+          <button onClick={onClick} className="text-[var(--color-text-secondary)] hover:text-brand-accent transition-colors">
+            {actionIcon || <InformationCircleIcon className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
+      <p className="text-2xl font-bold mt-1 text-[var(--color-text-primary)]">{value}</p>
+      {subValue && <p className="text-xs text-[var(--color-text-secondary)] mt-1">{subValue}</p>}
+    </div>
+  </div>
+);
+
+const ProgressCard: React.FC<{ meta: number; realizado: number; progress: number; period: string; onOpenSettings: () => void }> = ({ meta, realizado, progress, period, onOpenSettings }) => (
+  <div className="glass-card p-5 rounded-lg flex flex-col justify-between h-full relative overflow-hidden">
+    <div className="absolute top-0 right-0 p-3 opacity-10">
+      <TargetIcon className="w-24 h-24 rotate-12" />
+    </div>
+    <div className="relative z-10">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-medium text-[var(--color-text-secondary)]">Meta {period && `(${period})`}</h3>
+        <button onClick={onOpenSettings} className="text-[var(--color-text-secondary)] hover:text-brand-accent transition-colors">
+          <CogIcon className="w-4 h-4" />
         </button>
       </div>
-      <div className="flex justify-between items-baseline">
-        <div className="text-left">
-          <p className="text-2xl md:text-3xl font-bold">{realizado}</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">Realizados</p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl md:text-3xl font-bold">{meta}</p>
-          <p className="text-xs text-[var(--color-text-secondary)]">Meta</p>
-        </div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-bold text-[var(--color-text-primary)]">{realizado}</span>
+        <span className="text-xs text-[var(--color-text-secondary)]">/ {meta}</span>
       </div>
-    </div>
-    <div className="mt-4">
-      <div className="w-full bg-[var(--color-bg-muted)] rounded-full h-2.5 overflow-hidden">
-        <div className="bg-brand-accent h-2.5 rounded-full" style={{ width: `${progress > 100 ? 100 : progress}%` }}></div>
+      <div className="mt-3 w-full bg-[var(--color-bg-muted)] rounded-full h-2">
+        <div className="bg-brand-accent h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min(progress, 100)}%` }}></div>
       </div>
-      <p className="text-right text-xs text-[var(--color-text-secondary)] mt-1">{progress.toFixed(0)}% Atingido</p>
-    </div>
-  </div>
-);
-
-const MetricItem: React.FC<{ icon: React.ReactNode, label: string, value: string, color?: string }> = ({ icon, label, value, color = 'text-[var(--color-text-primary)]' }) => (
-  <div>
-    <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-      {icon}
-      <span>{label}</span>
-    </div>
-    <p className={`text-2xl font-bold mt-1 ${color}`}>{value}</p>
-  </div>
-);
-
-const AggregatedMetricsCard: React.FC<{
-  vgvTotal: number;
-  comissaoTotal: number;
-  comissaoRecebida: number;
-  comissaoLiquidaPendente: number;
-  mediaPercentual: string;
-  onOpenCommissionDetails: () => void;
-}> = ({ vgvTotal, comissaoTotal, comissaoRecebida, comissaoLiquidaPendente, mediaPercentual, onOpenCommissionDetails }) => (
-  <div className="glass-card p-8 rounded-2xl flex flex-col justify-center min-h-[200px]">
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-8">
-      <MetricItem
-        icon={<CollectionIcon className="w-5 h-5" />}
-        label="VGV Total"
-        value={formatCurrencyBRL(vgvTotal)}
-      />
-      <MetricItem
-        icon={<CurrencyDollarIcon className="w-5 h-5" />}
-        label="Comissão Total"
-        value={formatCurrencyBRL(comissaoTotal)}
-      />
-      <div>
-        <div className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-          <CheckCircleIcon className="w-5 h-5" />
-          <span>Comissão Recebida</span>
-          <button onClick={onOpenCommissionDetails} className="text-[var(--color-text-secondary)]/60 hover:text-brand-accent transition-colors" title="Ver detalhes">
-            <InformationCircleIcon className="w-5 h-5" />
-          </button>
-        </div>
-        <p className="text-2xl font-bold mt-1 text-green-600">{formatCurrencyBRL(comissaoRecebida)}</p>
-      </div>
-      <MetricItem
-        icon={<ChartPieIcon className="w-5 h-5" />}
-        label="Percentual de Retorno"
-        value={mediaPercentual}
-      />
+      <p className="text-xs text-right mt-1 text-brand-accent font-semibold">{progress.toFixed(0)}%</p>
     </div>
   </div>
 );
@@ -100,49 +72,56 @@ const SalesKPIs: React.FC<SalesKPIsProps> = ({ sales, goal, goalPeriod, onOpenGo
   const comissaoRecebida = sales
     .filter(s => s.statusRecebimento === ReceiptStatus.Sim)
     .reduce((sum, s) => sum + (s.comissaoLiquida || (s.comissao * (1 - ((s.aliquotaImposto || 0) / 100)))), 0);
-  const comissaoLiquidaPendente = sales
-    .filter(s => s.statusRecebimento === ReceiptStatus.Nao)
-    .reduce((sum, s) => sum + (s.comissaoLiquida || (s.comissao * (1 - ((s.aliquotaImposto || 0) / 100)))), 0);
   const comissaoMediaPercentual = vgvTotal > 0 ? (comissaoTotal / vgvTotal) * 100 : 0;
 
+  // Taxa efetiva calculation
+  const totalComissaoBruta = sales.reduce((sum, s) => sum + s.comissao, 0);
+  const totalImposto = sales.reduce((sum, s) => sum + (s.comissao - (s.comissaoLiquida || (s.comissao * (1 - ((s.aliquotaImposto || 0) / 100))))), 0);
+  const taxaEfetiva = totalComissaoBruta > 0 ? (totalImposto / totalComissaoBruta) * 100 : 0;
+
   return (
-    <div className="flex flex-col h-full gap-6">
-      <ProgressKpiCard
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* 1. Meta / Progresso */}
+      <ProgressCard
         meta={goal}
         realizado={realizado}
         progress={progresso}
         period={goalPeriod}
         onOpenSettings={onOpenGoalSettings}
       />
-      <AggregatedMetricsCard
-        vgvTotal={vgvTotal}
-        comissaoTotal={comissaoTotal}
-        comissaoRecebida={comissaoRecebida}
-        comissaoLiquidaPendente={comissaoLiquidaPendente}
-        mediaPercentual={`${comissaoMediaPercentual.toFixed(2)}%`}
-        onOpenCommissionDetails={onOpenCommissionDetails}
+
+      {/* 2. VGV Total */}
+      <KPICard
+        icon={<CollectionIcon />}
+        label="VGV Total"
+        value={formatCurrencyBRL(vgvTotal)}
+        subValue={`${sales.length} vendas ativas`}
+        color="text-blue-500"
       />
 
-      <div className="glass-card p-4 rounded-xl flex items-center justify-between border-l-4 border-l-orange-500/50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-orange-500/10 rounded-lg">
-            <BanknotesIcon className="w-5 h-5 text-orange-500" />
+      {/* 3. Comissão Recebida */}
+      <KPICard
+        icon={<CheckCircleIcon />}
+        label="Receita Líquida"
+        value={formatCurrencyBRL(comissaoRecebida)}
+        subValue={`Previsto: ${formatCurrencyBRL(comissaoTotal)}`}
+        color="text-emerald-500"
+        onClick={onOpenCommissionDetails}
+      />
+
+      {/* 4. Eficiência / Retorno */}
+      <div className="glass-card p-5 rounded-xl flex flex-col justify-between">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-purple-500/10 rounded-lg">
+            <ChartPieIcon className="w-5 h-5 text-purple-500" />
           </div>
-          <div>
-            <p className="text-sm text-[var(--color-text-secondary)]">Total Impostos</p>
-            <p className="font-semibold text-[var(--color-text-primary)]">{formatCurrencyBRL(sales.reduce((sum, s) => sum + (s.comissao - (s.comissaoLiquida || (s.comissao * (1 - ((s.aliquotaImposto || 0) / 100))))), 0))}</p>
-          </div>
+          <p className="text-sm font-medium text-[var(--color-text-secondary)]">Retorno Médio</p>
         </div>
-        <div className="h-8 w-px bg-[var(--color-border)] mx-4"></div>
-        <div className="text-right">
-          <p className="text-sm text-[var(--color-text-secondary)]">Taxa Efetiva</p>
-          <p className="font-semibold text-[var(--color-text-primary)]">
-            {(() => {
-              const totalComissao = sales.reduce((sum, s) => sum + s.comissao, 0);
-              const totalImposto = sales.reduce((sum, s) => sum + (s.comissao - (s.comissaoLiquida || (s.comissao * (1 - ((s.aliquotaImposto || 0) / 100))))), 0);
-              return totalComissao > 0 ? ((totalImposto / totalComissao) * 100).toFixed(1) + '%' : '0.0%';
-            })()}
-          </p>
+        <p className="text-2xl font-bold text-[var(--color-text-primary)]">{comissaoMediaPercentual.toFixed(2)}%</p>
+
+        <div className="flex items-center justify-between mt-2 pt-2 border-t border-[var(--color-border)]">
+          <span className="text-xs text-[var(--color-text-secondary)]">Taxa Efetiva (Imp.)</span>
+          <span className="text-xs font-semibold text-orange-500">{taxaEfetiva.toFixed(1)}%</span>
         </div>
       </div>
     </div>

@@ -18,8 +18,9 @@ interface SalesDashboardProps {
 
 const SalesDashboard: React.FC<SalesDashboardProps> = ({ sales, goal, goalPeriod, onOpenGoalSettings, onOpenCommissionDetails }) => {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="space-y-6 animate-fade-in">
+      {/* 1. Header KPIs Row - Full Width */}
+      <div className="w-full">
         <SalesKPIs
           sales={sales}
           goal={goal}
@@ -27,14 +28,23 @@ const SalesDashboard: React.FC<SalesDashboardProps> = ({ sales, goal, goalPeriod
           onOpenGoalSettings={onOpenGoalSettings}
           onOpenCommissionDetails={onOpenCommissionDetails}
         />
-        <div className="space-y-6">
-          <UpcomingPayments items={sales} title="Próximos Recebimentos (Vendas)" />
-          <ClosingsByMonthChart items={sales} />
-        </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ReceiptStatusChart items={sales} />
-        <SaleStatusChart sales={sales} />
+
+      {/* 2. Main Analytics Row - Asymmetric Split (8/4) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-8 space-y-6">
+          {/* Primary Chart */}
+          <ClosingsByMonthChart items={sales} />
+
+          {/* Actionable List */}
+          <UpcomingPayments items={sales} title="Próximos Recebimentos" />
+        </div>
+
+        <div className="lg:col-span-4 space-y-6">
+          {/* Secondary Charts */}
+          <SaleStatusChart sales={sales} />
+          <ReceiptStatusChart items={sales} />
+        </div>
       </div>
     </div>
   );

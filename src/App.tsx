@@ -21,8 +21,20 @@ import SaleDetailModal from './components/SaleDetailModal';
 import AddSaleModal from './components/AddSaleModal';
 import EditSaleModal from './components/EditSaleModal';
 
-import { TargetIcon, PlusIcon, CogIcon, Bars3Icon } from './components/IconComponents';
+import {
+  HomeIcon, UserIcon, CalendarIcon, CalendarPlusIcon, PlusIcon,
+  DocumentTextIcon, PencilIcon, SaveIcon, PhoneIcon, MailIcon,
+  TrashIcon, ChevronLeftIcon, ChevronRightIcon, CogIcon, BellIcon,
+  UserCircleIcon, SparklesIcon, ArchiveBoxArrowDownIcon,
+  DocumentChartBarIcon, ShieldCheckIcon, ArrowDownTrayIcon, Bars3Icon,
+  ArrowRightOnRectangleIcon, QuestionMarkCircleIcon
+} from './components/IconComponents';
 import InfoCarousel from './components/InfoCarousel';
+import Login from './components/Login';
+import { supabase } from './lib/supabase';
+import { Session } from '@supabase/supabase-js';
+import { useContracts } from './hooks/useContracts';
+import { useSales } from './hooks/useSales';
 
 type View = 'locacao' | 'vendas';
 const REMINDER_THRESHOLD_DAYS = 3;
@@ -36,20 +48,42 @@ const initialProfileData = {
 };
 
 const STORAGE_KEYS = {
-  CONTRACTS: 'app_contracts_v1',
-  SALES: 'app_sales_v1',
-  PROFILE: 'app_profile_v1',
-  RENTAL_GOAL: 'app_rental_goal_v1',
-  SALES_GOAL: 'app_sales_goal_v1',
+  // CONTRACTS: 'app_contracts_v2', // Deprecated
+  // SALES: 'app_sales_v2', // Deprecated
+  PROFILE: 'app_profile_v2',
+  RENTAL_GOAL: 'app_rental_goal_v2',
+  SALES_GOAL: 'app_sales_goal_v2',
 };
 
 const App: React.FC = () => {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [activeView, setActiveView] = useState<View>('locacao');
+
+  // Auth Effect
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   // State for User Profile
   const [profileData, setProfileData] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
-    return saved ? JSON.parse(saved) : initialProfileData;
+    return saved ? JSON.parse(saved as string) : initialProfileData;
   });
 
   useEffect(() => {
@@ -59,7 +93,7 @@ const App: React.FC = () => {
   // State for Theme
   const [activeTheme, setActiveTheme] = useState<Theme>(() => {
     try {
-      const savedTheme = localStorage.getItem('app-theme');
+      const savedTheme = localStorage.getItem('app-theme-v4');
       return savedTheme ? JSON.parse(savedTheme) : themes[0];
     } catch (error) {
       console.error("Failed to parse theme from localStorage", error);
@@ -72,12 +106,13 @@ const App: React.FC = () => {
     Object.entries(activeTheme.colors).forEach(([key, value]) => {
       root.style.setProperty(key, value);
     });
-    localStorage.setItem('app-theme', JSON.stringify(activeTheme));
+    localStorage.setItem('app-theme-v4', JSON.stringify(activeTheme));
 
     // Set dynamic background and toggle Tailwind dark mode
     if (activeTheme.mode === 'dark') {
       root.classList.add('dark');
-      document.body.style.backgroundImage = 'radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%)';
+      // Gradient: Top center glow of Midnight Blue fading into True Black
+      document.body.style.backgroundImage = 'radial-gradient(circle at 50% -20%, #0f172a 0%, #000000 40%, #000000 100%)';
     } else {
       root.classList.remove('dark');
       document.body.style.backgroundImage = 'linear-gradient(to bottom right, var(--color-bg-base), var(--color-bg-muted))';
@@ -88,16 +123,34 @@ const App: React.FC = () => {
     setActiveTheme(theme);
   };
 
-  // State for Rentals
-  const [contracts, setContracts] = useState<Contract[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.CONTRACTS);
-    return saved ? JSON.parse(saved) : mockContracts;
-  });
+  // Use Supabase Hooks
+  const {
+    contracts,
+    fetchContracts,
+    addContract: addSupabaseContract,
+    updateContract: updateSupabaseContract,
+    deleteContract: deleteSupabaseContract,
+    setContracts // Exposed but used cautiously
+  } = useContracts(session);
 
+  const {
+    sales,
+    fetchSales,
+    addSale: addSupabaseSale,
+    updateSale: updateSupabaseSale,
+    deleteSale: deleteSupabaseSale,
+    setSales // Exposed but used cautiously
+  } = useSales(session);
+
+  // Initial Fetch
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CONTRACTS, JSON.stringify(contracts));
-  }, [contracts]);
+    if (session) {
+      fetchContracts();
+      fetchSales();
+    }
+  }, [session, fetchContracts, fetchSales]);
 
+  // State for Rentals (Legacy states removed)
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [isAddContractModalOpen, setIsAddContractModalOpen] = useState(false);
@@ -117,16 +170,7 @@ const App: React.FC = () => {
 
   const [rentalGoalPeriod, setRentalGoalPeriod] = useState('');
 
-  // State for Sales
-  const [sales, setSales] = useState<SaleContract[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SALES);
-    return saved ? JSON.parse(saved) : mockSales;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(sales));
-  }, [sales]);
-
+  // State for Sales (Legacy states removed)
   const [selectedSale, setSelectedSale] = useState<SaleContract | null>(null);
   const [editingSale, setEditingSale] = useState<SaleContract | null>(null);
   const [isAddSaleModalOpen, setIsAddSaleModalOpen] = useState(false);
@@ -155,6 +199,9 @@ const App: React.FC = () => {
 
   // State for Settings Modal
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+  // State for Help Modal
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   // State for Mobile Menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -230,32 +277,46 @@ const App: React.FC = () => {
   }, [saleFilter, salesItemsPerPage]);
 
   // Handlers for Rentals
-  const handleUpdateContractStatus = useCallback((contractId: string, newStatus: ReceiptStatus) => {
-    setContracts(prev => prev.map(c => c.id === contractId ? { ...c, statusRecebimento: newStatus } : c));
-    setSelectedContract(prev => prev && prev.id === contractId ? { ...prev, statusRecebimento: newStatus } : prev);
-  }, []);
+  const handleUpdateContractStatus = useCallback(async (contractId: string, newStatus: ReceiptStatus) => {
+    try {
+      await updateSupabaseContract(contractId, { statusRecebimento: newStatus });
+    } catch (e) { alert("Erro ao atualizar status"); }
+  }, [updateSupabaseContract]);
 
-  const handleAddContract = useCallback((newContractData: Omit<Contract, 'id' | 'percentualComissao'>) => {
-    const newContract: Contract = {
+  const handleAddContract = useCallback(async (newContractData: Omit<Contract, 'id' | 'percentualComissao'>) => {
+    // Calculate derived fields before sending to hook/DB
+    const percentualComissao = newContractData.valorLocacao > 0 ? newContractData.comissao / newContractData.valorLocacao : 0;
+    const comissaoLiquida = newContractData.comissao * (1 - ((newContractData.aliquotaImposto || 0) / 100));
+
+    const contractPayload = {
       ...newContractData,
-      id: `c-${new Date().getTime()}`,
-      percentualComissao: newContractData.valorLocacao > 0 ? newContractData.comissao / newContractData.valorLocacao : 0,
-      comissaoLiquida: newContractData.comissao * (1 - ((newContractData.aliquotaImposto || 0) / 100)),
-      lembreteAtivo: false,
+      percentualComissao,
+      comissaoLiquida,
+      lembreteAtivo: false
     };
-    setContracts(prev => [newContract, ...prev]);
-    setIsAddContractModalOpen(false);
-  }, []);
 
-  const handleUpdateContract = useCallback((updatedContract: Contract) => {
-    setContracts(prev => prev.map(c => c.id === updatedContract.id ? updatedContract : c));
-    setEditingContract(null);
-  }, []);
+    try {
+      await addSupabaseContract(contractPayload);
+      setIsAddContractModalOpen(false);
+    } catch (e) { alert("Erro ao adicionar contrato"); }
+  }, [addSupabaseContract]);
 
-  const handleDeleteContract = useCallback((contractId: string) => {
-    setContracts(prev => prev.filter(c => c.id !== contractId));
-    setEditingContract(null);
-  }, []);
+  const handleUpdateContract = useCallback(async (updatedContract: Contract) => {
+    try {
+      await updateSupabaseContract(updatedContract.id, updatedContract);
+      setEditingContract(null);
+    } catch (e) { alert("Erro ao atualizar contrato"); }
+  }, [updateSupabaseContract]);
+
+  const handleDeleteContract = useCallback(async (contractId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir este contrato?')) {
+      try {
+        await deleteSupabaseContract(contractId);
+        setEditingContract(null);
+        setSelectedContract(null);
+      } catch (e) { alert("Erro ao excluir contrato"); }
+    }
+  }, [deleteSupabaseContract]);
 
   const handleSelectContract = (contract: Contract) => {
     if (isRentalEditMode) setEditingContract(contract);
@@ -263,32 +324,45 @@ const App: React.FC = () => {
   };
 
   // Handlers for Sales
-  const handleUpdateSaleStatus = useCallback((saleId: string, newStatus: ReceiptStatus) => {
-    setSales(prev => prev.map(s => s.id === saleId ? { ...s, statusRecebimento: newStatus } : s));
-    setSelectedSale(prev => prev && prev.id === saleId ? { ...prev, statusRecebimento: newStatus } : prev);
-  }, []);
+  const handleUpdateSaleStatus = useCallback(async (saleId: string, newStatus: ReceiptStatus) => {
+    try {
+      await updateSupabaseSale(saleId, { statusRecebimento: newStatus });
+    } catch (e) { alert("Erro ao atualizar status"); }
+  }, [updateSupabaseSale]);
 
-  const handleAddSale = useCallback((newSaleData: Omit<SaleContract, 'id' | 'percentualComissao'>) => {
-    const newSale: SaleContract = {
+  const handleAddSale = useCallback(async (newSaleData: Omit<SaleContract, 'id' | 'percentualComissao'>) => {
+    const percentualComissao = newSaleData.valorVenda > 0 ? newSaleData.comissao / newSaleData.valorVenda : 0;
+    const comissaoLiquida = newSaleData.comissao * (1 - ((newSaleData.aliquotaImposto || 0) / 100));
+
+    const salePayload = {
       ...newSaleData,
-      id: `s-${new Date().getTime()}`,
-      percentualComissao: newSaleData.valorVenda > 0 ? newSaleData.comissao / newSaleData.valorVenda : 0,
-      comissaoLiquida: newSaleData.comissao * (1 - ((newSaleData.aliquotaImposto || 0) / 100)),
-      lembreteAtivo: false,
+      percentualComissao,
+      comissaoLiquida,
+      lembreteAtivo: false
     };
-    setSales(prev => [newSale, ...prev]);
-    setIsAddSaleModalOpen(false);
-  }, []);
 
-  const handleUpdateSale = useCallback((updatedSale: SaleContract) => {
-    setSales(prev => prev.map(s => s.id === updatedSale.id ? updatedSale : s));
-    setEditingSale(null);
-  }, []);
+    try {
+      await addSupabaseSale(salePayload);
+      setIsAddSaleModalOpen(false);
+    } catch (e) { alert("Erro ao adicionar venda"); }
+  }, [addSupabaseSale]);
 
-  const handleDeleteSale = useCallback((saleId: string) => {
-    setSales(prev => prev.filter(s => s.id !== saleId));
-    setEditingSale(null);
-  }, []);
+  const handleUpdateSale = useCallback(async (updatedSale: SaleContract) => {
+    try {
+      await updateSupabaseSale(updatedSale.id, updatedSale);
+      setEditingSale(null);
+    } catch (e) { alert("Erro ao atualizar venda"); }
+  }, [updateSupabaseSale]);
+
+  const handleDeleteSale = useCallback(async (saleId: string) => {
+    if (window.confirm('Tem certeza que deseja excluir esta venda?')) {
+      try {
+        await deleteSupabaseSale(saleId);
+        setEditingSale(null);
+        setSelectedSale(null);
+      } catch (e) { alert("Erro ao excluir venda"); }
+    }
+  }, [deleteSupabaseSale]);
 
   const handleSelectSale = (sale: SaleContract) => {
     if (isSaleEditMode) setEditingSale(sale);
@@ -322,19 +396,21 @@ const App: React.FC = () => {
   const handleCloseCommissionDetails = () => setIsCommissionModalOpen(false);
 
   // Handlers for Reminders
-  const handleToggleReminder = useCallback((id: string, type: 'locacao' | 'vendas') => {
-    if (type === 'locacao') {
-      setContracts(prev => prev.map(c =>
-        c.id === id ? { ...c, lembreteAtivo: !c.lembreteAtivo } : c
-      ));
-      setSelectedContract(prev => prev && prev.id === id ? { ...prev, lembreteAtivo: !prev.lembreteAtivo } : prev);
-    } else {
-      setSales(prev => prev.map(s =>
-        s.id === id ? { ...s, lembreteAtivo: !s.lembreteAtivo } : s
-      ));
-      setSelectedSale(prev => prev && prev.id === id ? { ...prev, lembreteAtivo: !prev.lembreteAtivo } : prev);
-    }
-  }, []);
+  const handleToggleReminder = useCallback(async (id: string, type: 'locacao' | 'vendas') => {
+    try {
+      if (type === 'locacao') {
+        const contract = contracts.find(c => c.id === id);
+        if (contract) {
+          await updateSupabaseContract(id, { lembreteAtivo: !contract.lembreteAtivo });
+        }
+      } else {
+        const sale = sales.find(s => s.id === id);
+        if (sale) {
+          await updateSupabaseSale(id, { lembreteAtivo: !sale.lembreteAtivo });
+        }
+      }
+    } catch (e) { alert("Erro ao atualizar lembrete"); }
+  }, [contracts, sales, updateSupabaseContract, updateSupabaseSale]);
 
   const handleSelectReminder = (item: Contract | SaleContract) => {
     if ('valorLocacao' in item) {
@@ -381,13 +457,10 @@ const App: React.FC = () => {
     setIsGoalModalOpen(false);
     setIsSettingsModalOpen(false);
 
-    // Clear ONLY business data from local storage
-    // localStorage.removeItem('app-theme'); // Preserve theme
-
-    // Remove specific keys, preserving profile
+    // Remove specific keys, preserving profile and data (data is in DB now)
     const keysToRemove = [
-      STORAGE_KEYS.CONTRACTS,
-      STORAGE_KEYS.SALES,
+      // STORAGE_KEYS.CONTRACTS, 
+      // STORAGE_KEYS.SALES,
       STORAGE_KEYS.RENTAL_GOAL,
       STORAGE_KEYS.SALES_GOAL
     ];
@@ -453,6 +526,18 @@ const App: React.FC = () => {
     );
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-bg-base)]">
+        <div className="w-12 h-12 border-4 border-brand-accent/20 border-t-brand-accent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login onLoginSuccess={() => { }} />;
+  }
+
   return (
     <div className="min-h-screen font-sans">
       <header className={`p-6 sticky top-0 z-20 transition-all duration-300 ${isScrolled ? 'bg-[var(--color-bg-surface)]/90 backdrop-blur-xl shadow-sm border-b border-[var(--color-border)]' : 'bg-transparent backdrop-blur-sm border-b border-transparent'}`}>
@@ -471,6 +556,13 @@ const App: React.FC = () => {
             {/* Desktop Icons */}
             <div className="hidden md:flex items-center gap-2">
               <ReminderPopup reminders={reminders} onSelectReminder={handleSelectReminder} />
+              <button
+                onClick={() => setIsHelpModalOpen(true)}
+                className="text-[var(--color-text-secondary)] hover:text-brand-accent transition-colors p-2 rounded-full hover:bg-[var(--color-bg-surface)]/50"
+                aria-label="Ajuda"
+              >
+                <QuestionMarkCircleIcon className="w-6 h-6" />
+              </button>
               <button
                 onClick={() => setIsSettingsModalOpen(true)}
                 className="text-[var(--color-text-secondary)] hover:text-brand-accent transition-colors p-2 rounded-full hover:bg-[var(--color-bg-surface)]/50"
@@ -499,6 +591,15 @@ const App: React.FC = () => {
                 <Bars3Icon className="w-6 h-6" />
               </button>
             </div>
+            {session && (
+              <button
+                onClick={handleLogout}
+                className="hidden md:flex text-[var(--color-text-secondary)] hover:text-red-500 transition-colors p-2 rounded-full hover:bg-red-500/10 ml-2"
+                title="Sair"
+              >
+                <ArrowRightOnRectangleIcon className="w-6 h-6" />
+              </button>
+            )}
           </div>
           {isMobileMenuOpen && (
             <div ref={mobileMenuRef} className="absolute top-full right-0 mt-2 w-56 bg-[var(--color-bg-surface)] rounded-xl shadow-2xl border border-[var(--color-border)] z-30 md:hidden animate-fade-in-down">
@@ -516,6 +617,13 @@ const App: React.FC = () => {
                 >
                   <CogIcon className="w-5 h-5 text-[var(--color-text-secondary)]" />
                   <span>Ajustes</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 p-2 rounded-lg text-left text-sm font-semibold text-red-500 hover:bg-red-500/5 transition-colors"
+                >
+                  <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                  <span>Sair</span>
                 </button>
               </nav>
             </div>
@@ -685,9 +793,117 @@ const App: React.FC = () => {
         <PlusIcon className="w-7 h-7" />
       </button>
 
-      <footer className="text-center p-4 text-[var(--color-text-secondary)]/80 text-sm mt-8">
-        <p>Desenvolvido com React, TypeScript e Tailwind CSS.</p>
-      </footer>
+
+
+      {/* Help Modal */}
+      {isHelpModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[var(--color-bg-surface)] rounded-2xl shadow-2xl border border-[var(--color-border)] w-full max-w-lg p-6 relative">
+            <button
+              onClick={() => setIsHelpModalOpen(false)}
+              className="absolute top-4 right-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+            >
+              <ChevronLeftIcon className="w-6 h-6 rotate-180" />
+            </button>
+
+            <h2 className="text-2xl font-bold text-[var(--color-text-primary)] mb-6 flex items-center gap-2 border-b border-[var(--color-border)] pb-4">
+              <QuestionMarkCircleIcon className="w-8 h-8 text-brand-accent" />
+              Guia de Uso
+            </h2>
+
+            <div className="text-[var(--color-text-secondary)] space-y-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              {/* Section 1: Dashboard */}
+              <details className="group border border-[var(--color-border)] rounded-xl overflow-hidden bg-[var(--color-bg-muted)]/30">
+                <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--color-bg-muted)] transition-colors list-none">
+                  <div className="flex items-center gap-3">
+                    <DocumentChartBarIcon className="w-5 h-5 text-brand-accent" />
+                    <span className="font-bold text-[var(--color-text-primary)]">Dashboard & Metas</span>
+                  </div>
+                  <ChevronLeftIcon className="w-5 h-5 transition-transform group-open:-rotate-90 pointer-events-none" />
+                </summary>
+                <div className="p-4 pt-0 text-sm space-y-3 border-t border-[var(--color-border)]/50 bg-[var(--color-bg-base)]/50">
+                  <p>Acompanhe seu desempenho em tempo real através dos indicadores principais.</p>
+                  <ul className="list-disc pl-4 space-y-2">
+                    <li><strong>Gráficos:</strong> Mostram o percentual atingido da sua meta mensal de comissões.</li>
+                    <li><strong>Ajustar Meta:</strong> Clique no ícone de engrenagem <CogIcon className="w-4 h-4 inline" /> dentro do card de meta para definir seu objetivo do mês.</li>
+                  </ul>
+                </div>
+              </details>
+
+              {/* Section 2: Gestão */}
+              <details className="group border border-[var(--color-border)] rounded-xl overflow-hidden bg-[var(--color-bg-muted)]/30" open>
+                <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--color-bg-muted)] transition-colors list-none">
+                  <div className="flex items-center gap-3">
+                    <Bars3Icon className="w-5 h-5 text-brand-accent" />
+                    <span className="font-bold text-[var(--color-text-primary)]">Gestão de Contratos</span>
+                  </div>
+                  <ChevronLeftIcon className="w-5 h-5 transition-transform group-open:-rotate-90 pointer-events-none" />
+                </summary>
+                <div className="p-4 pt-0 text-sm space-y-4 border-t border-[var(--color-border)]/50 bg-[var(--color-bg-base)]/50">
+                  <div className="space-y-2">
+                    <p className="font-semibold text-brand-accent">Como cadastrar novo:</p>
+                    <ol className="list-decimal pl-4 space-y-1">
+                      <li>Clique no botão <span className="bg-brand-accent text-white px-1.5 py-0.5 rounded text-xs">+ Adicionar</span>.</li>
+                      <li>Preencha os dados (Cliente, Data, Valores).</li>
+                      <li>Clique em <strong>Salvar Contrato</strong>.</li>
+                    </ol>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="font-semibold text-brand-accent">Como editar ou excluir:</p>
+                    <ol className="list-decimal pl-4 space-y-1">
+                      <li>Na lista, clique sobre o contrato desejado.</li>
+                      <li>Para editar valores/dados, clique no lápis <PencilIcon className="w-4 h-4 inline" />.</li>
+                      <li>Para apagar permanentemente, clique na lixeira <TrashIcon className="w-4 h-4 inline text-red-500" />.</li>
+                    </ol>
+                  </div>
+                </div>
+              </details>
+
+              {/* Section 3: Lembretes */}
+              <details className="group border border-[var(--color-border)] rounded-xl overflow-hidden bg-[var(--color-bg-muted)]/30">
+                <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--color-bg-muted)] transition-colors list-none">
+                  <div className="flex items-center gap-3">
+                    <BellIcon className="w-5 h-5 text-brand-accent" />
+                    <span className="font-bold text-[var(--color-text-primary)]">Lembretes Inteligentes</span>
+                  </div>
+                  <ChevronLeftIcon className="w-5 h-5 transition-transform group-open:-rotate-90 pointer-events-none" />
+                </summary>
+                <div className="p-4 pt-0 text-sm border-t border-[var(--color-border)]/50 bg-[var(--color-bg-base)]/50">
+                  <p className="leading-relaxed">
+                    Não perca prazos! Ao ativar o sino <BellIcon className="w-4 h-4 inline" /> em um contrato, o sistema disparará alertas visuais e no WhatsApp (se configurado) quando faltarem <strong>3 dias</strong> para o recebimento previsto.
+                  </p>
+                </div>
+              </details>
+
+              {/* Section 4: Temas */}
+              <details className="group border border-[var(--color-border)] rounded-xl overflow-hidden bg-[var(--color-bg-muted)]/30">
+                <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--color-bg-muted)] transition-colors list-none">
+                  <div className="flex items-center gap-3">
+                    <SparklesIcon className="w-5 h-5 text-brand-accent" />
+                    <span className="font-bold text-[var(--color-text-primary)]">Personalização</span>
+                  </div>
+                  <ChevronLeftIcon className="w-5 h-5 transition-transform group-open:-rotate-90 pointer-events-none" />
+                </summary>
+                <div className="p-4 pt-0 text-sm border-t border-[var(--color-border)]/50 bg-[var(--color-bg-base)]/50">
+                  <p className="leading-relaxed">
+                    Acesse o menu de <strong>Ajustes</strong> <CogIcon className="w-4 h-4 inline" /> para explorar a <em>Asylab Collection</em>. Você pode escolher entre 5 cores de destaque e alternar entre os modos <strong>Claro</strong> e <strong>Verdadeiro Escuro</strong>.
+                  </p>
+                </div>
+              </details>
+            </div>
+
+            <div className="mt-8 flex justify-between items-center border-t border-[var(--color-border)] pt-6">
+              <span className="text-xs text-[var(--color-text-secondary)]/50">Versão 2.4.0</span>
+              <button
+                onClick={() => setIsHelpModalOpen(false)}
+                className="px-6 py-2.5 bg-brand-accent text-white font-bold rounded-xl hover:bg-opacity-90 transition-all shadow-lg shadow-brand-accent/20 active:scale-95"
+              >
+                Entendi, obrigado!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <style>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-10px); }

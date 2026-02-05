@@ -13,87 +13,78 @@ export interface Theme {
   };
 }
 
-const defaultLightColors = {
-  '--color-bg-base': '#f8fafc',
-  '--color-bg-surface': '#ffffff',
-  '--color-bg-muted': '#f1f5f9',
-  '--color-border': '#e2e8f0',
-  '--color-text-primary': '#0f172a',
-  '--color-text-secondary': '#64748b',
+const lightBase = {
+  '--color-bg-base': '#ffffff', // Pure White
+  '--color-bg-surface': '#f8fafc', // Slate 50
+  '--color-bg-muted': '#f1f5f9', // Slate 100
+  '--color-border': '#e2e8f0', // Slate 200
+  '--color-text-primary': '#0f172a', // Slate 900
+  '--color-text-secondary': '#64748b', // Slate 500
+  '--color-text-accent': '#ffffff',
 };
 
-const defaultDarkColors = {
-  '--color-bg-base': '#0f172a', // Slate 900
-  '--color-bg-surface': '#1e293b', // Slate 800
-  '--color-bg-muted': '#334155', // Slate 700
-  '--color-border': '#334155', // Slate 700
-  '--color-text-primary': '#f8fafc', // Slate 50
-  '--color-text-secondary': '#94a3b8', // Slate 400
+const trueDarkBase = {
+  '--color-bg-base': '#111111', // Matte Black
+  '--color-bg-surface': '#1c1c1c', // Off-Black
+  '--color-bg-muted': '#2a2a2a', // Dark Grey
+  '--color-border': '#2a2a2a', // Subtle Grey
+  '--color-text-primary': '#ffffff', // White
+  '--color-text-secondary': '#a1a1aa', // Zinc 400
+  '--color-text-accent': '#ffffff',
 };
 
 export const themes: Theme[] = [
-  // Light Themes
+  // --- Dark Modes (Default) ---
   {
-    name: 'Violeta (Claro)',
+    name: 'Asylab Blue (Dark)',
+    mode: 'dark',
+    colors: { ...trueDarkBase, '--color-brand-accent': '#0065ff' },
+  },
+  {
+    name: 'Asylab Purple (Dark)',
+    mode: 'dark',
+    colors: { ...trueDarkBase, '--color-brand-accent': '#8b5cf6' },
+  },
+  {
+    name: 'Asylab Pink (Dark)',
+    mode: 'dark',
+    colors: { ...trueDarkBase, '--color-brand-accent': '#f43f5e' },
+  },
+  {
+    name: 'Asylab Orange (Dark)',
+    mode: 'dark',
+    colors: { ...trueDarkBase, '--color-brand-accent': '#f97316' },
+  },
+  {
+    name: 'Asylab Yellow (Dark)',
+    mode: 'dark',
+    colors: { ...trueDarkBase, '--color-brand-accent': '#eab308' },
+  },
+
+  // --- Light Modes ---
+  {
+    name: 'Asylab Blue (Light)',
     mode: 'light',
-    colors: {
-      ...defaultLightColors,
-      '--color-brand-accent': '#8b5cf6',
-      '--color-text-accent': '#ffffff',
-    },
+    colors: { ...lightBase, '--color-brand-accent': '#0065ff' },
   },
   {
-    name: 'Violeta (Escuro)',
-    mode: 'dark',
-    colors: {
-      ...defaultDarkColors,
-      '--color-brand-accent': '#a78bfa', // Lighter violet for dark mode
-      '--color-text-accent': '#ffffff',
-    },
-  },
-  {
-    name: 'Ocean (Claro)',
+    name: 'Asylab Purple (Light)',
     mode: 'light',
-    colors: {
-      ...defaultLightColors,
-      '--color-brand-accent': '#0ea5e9',
-      '--color-text-accent': '#ffffff',
-    },
+    colors: { ...lightBase, '--color-brand-accent': '#8b5cf6' },
   },
   {
-    name: 'Ocean (Escuro)',
-    mode: 'dark',
-    colors: {
-      ...defaultDarkColors,
-      '--color-brand-accent': '#38bdf8',
-      '--color-text-accent': '#ffffff',
-    },
+    name: 'Asylab Pink (Light)',
+    mode: 'light',
+    colors: { ...lightBase, '--color-brand-accent': '#f43f5e' },
   },
   {
-    name: 'Midnight (Premium)',
-    mode: 'dark',
-    colors: {
-      '--color-bg-base': '#000000',
-      '--color-bg-surface': '#111111',
-      '--color-bg-muted': '#222222',
-      '--color-border': '#333333',
-      '--color-text-primary': '#ffffff',
-      '--color-text-secondary': '#a1a1aa',
-      '--color-brand-accent': '#fbbf24', // Amber gold
-      '--color-text-accent': '#000000',
-    },
+    name: 'Asylab Orange (Light)',
+    mode: 'light',
+    colors: { ...lightBase, '--color-brand-accent': '#f97316' },
   },
   {
-    name: 'Forest (Escuro)',
-    mode: 'dark',
-    colors: {
-      ...defaultDarkColors,
-      '--color-bg-base': '#052e16', // Dark green
-      '--color-bg-surface': '#064e3b',
-      '--color-bg-muted': '#065f46',
-      '--color-border': '#047857',
-      '--color-brand-accent': '#34d399',
-      '--color-text-accent': '#064e3b',
-    },
+    name: 'Asylab Yellow (Light)',
+    mode: 'light',
+    colors: { ...lightBase, '--color-brand-accent': '#eab308' },
   },
 ];
