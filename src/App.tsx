@@ -62,32 +62,42 @@ const App: React.FC = () => {
 
   // Auth Effect
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const handleSession = (session: Session | null) => {
       setSession(session);
       setAuthLoading(false);
+
       if (session?.user) {
-        setProfileData(prev => ({
-          ...prev,
-          name: session.user.user_metadata.full_name || prev.name,
-          email: session.user.email || prev.email,
-          phone: session.user.user_metadata.phone || prev.phone
-        }));
+        setProfileData(prev => {
+          const isDifferentUser = prev.email && prev.email !== session.user.email;
+
+          if (isDifferentUser) {
+            return {
+              ...initialProfileData,
+              name: session.user.user_metadata.full_name || initialProfileData.name,
+              email: session.user.email || initialProfileData.email,
+              phone: session.user.user_metadata.phone || initialProfileData.phone
+            };
+          }
+
+          return {
+            ...prev,
+            name: session.user.user_metadata.full_name || prev.name,
+            email: session.user.email || prev.email,
+            phone: session.user.user_metadata.phone || prev.phone
+          };
+        });
+      } else {
+        setProfileData(initialProfileData);
+        setContracts([]);
+        setSales([]);
       }
-    });
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => handleSession(session));
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        setProfileData(prev => ({
-          ...prev,
-          name: session.user.user_metadata.full_name || prev.name,
-          email: session.user.email || prev.email,
-          phone: session.user.user_metadata.phone || prev.phone
-        }));
-      }
-    });
+    } = supabase.auth.onAuthStateChange((_event, session) => handleSession(session));
 
     return () => subscription.unsubscribe();
   }, []);
