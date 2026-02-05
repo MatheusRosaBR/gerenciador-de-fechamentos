@@ -379,9 +379,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     </div>
                 </div>
             </div>
-            </div>
             <LegalDocs isOpen={legalDocsOpen} onClose={() => setLegalDocsOpen(false)} initialTab={legalDocsTab} />
-        </div >
+        </div>
     );
 };
 

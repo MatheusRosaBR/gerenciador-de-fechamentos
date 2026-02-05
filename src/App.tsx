@@ -94,10 +94,20 @@ const App: React.FC = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem(STORAGE_KEYS.PROFILE);
+    localStorage.removeItem(STORAGE_KEYS.RENTAL_GOAL);
+    localStorage.removeItem(STORAGE_KEYS.SALES_GOAL);
+    setProfileData(initialProfileData);
+    setContracts([]);
+    setSales([]);
   };
 
   // State for User Profile
   const [profileData, setProfileData] = useState(() => {
+    // Check if we have a session to decide whether to trust local storage
+    // But since session state often loads async, we might still grab from LS initially.
+    // However, to fix the specific bug of "new user sees old user data", clearing LS on logout is the key.
+    // We will keep this initialization but rely on handleLogout to keep it clean.
     const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
     return saved ? JSON.parse(saved as string) : initialProfileData;
   });
