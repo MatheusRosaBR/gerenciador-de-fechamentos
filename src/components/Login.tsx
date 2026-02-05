@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { LockClosedIcon, EnvelopeIcon, PhoneIcon, EyeIcon, EyeSlashIcon, ChartPieIcon, CheckCircleIcon } from './IconComponents';
+import { LockClosedIcon, EnvelopeIcon, PhoneIcon, EyeIcon, EyeSlashIcon, ChartPieIcon, CheckCircleIcon, UserIcon } from './IconComponents';
 
 interface LoginProps {
     onLoginSuccess: () => void;
@@ -52,6 +52,7 @@ const MarketingBanner = () => (
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     const [loading, setLoading] = useState(false);
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
@@ -93,6 +94,11 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
         // Basic Validation
         if (isSignUp) {
+            if (!name.trim()) {
+                setError('Por favor, preencha seu nome.');
+                setLoading(false);
+                return;
+            }
             if (password !== confirmPassword) {
                 setError('As senhas não coincidem.');
                 setLoading(false);
@@ -112,6 +118,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     password,
                     options: {
                         data: {
+                            full_name: name, // Save name to metadata
                             phone: phone, // Save phone to user metadata
                         }
                     }
@@ -158,6 +165,28 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     </div>
 
                     <form onSubmit={handleAuth} className="space-y-5">
+                        {isSignUp && (
+                            <div className="animate-fade-in-down space-y-1.5">
+                                <label className="text-sm font-medium text-[var(--color-text-secondary)] ml-1" htmlFor="name">
+                                    Nome Completo
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <UserIcon className="h-5 w-5 text-[var(--color-text-secondary)] group-focus-within:text-brand-accent transition-colors" />
+                                    </div>
+                                    <input
+                                        id="name"
+                                        type="text"
+                                        required
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="block w-full pl-10 pr-3 py-3 bg-[var(--color-bg-muted)] border border-[var(--color-border)] rounded-lg text-[var(--color-text-primary)] placeholder-[var(--color-text-secondary)]/50 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all"
+                                        placeholder="Seu nome completo"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-[var(--color-text-secondary)] ml-1" htmlFor="email">
                                 E-mail corporativo

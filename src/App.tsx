@@ -65,12 +65,28 @@ const App: React.FC = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setAuthLoading(false);
+      if (session?.user) {
+        setProfileData(prev => ({
+          ...prev,
+          name: session.user.user_metadata.full_name || prev.name,
+          email: session.user.email || prev.email,
+          phone: session.user.user_metadata.phone || prev.phone
+        }));
+      }
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      if (session?.user) {
+        setProfileData(prev => ({
+          ...prev,
+          name: session.user.user_metadata.full_name || prev.name,
+          email: session.user.email || prev.email,
+          phone: session.user.user_metadata.phone || prev.phone
+        }));
+      }
     });
 
     return () => subscription.unsubscribe();
