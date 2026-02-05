@@ -1,0 +1,10 @@
+import { SaleContract, ReceiptStatus, SaleStatus } from '../types';
+
+export const mockSales: SaleContract[] = [
+  { id: 's1', imovel: 'CASA-PRAIA-01', cliente: 'João Silva', valorVenda: 750000, comissao: 37500, percentualComissao: 0.05, statusRecebimento: ReceiptStatus.Sim, statusVenda: SaleStatus.Vendido, dataVenda: '10/10/2025', dataRecebimento: '15/10/2025', telefone: '11 91111-1111', email: 'joao.s@email.com', lembreteAtivo: false },
+  { id: 's2', imovel: 'APTO-CENTRO-55', cliente: 'Maria Oliveira', valorVenda: 450000, comissao: 22500, percentualComissao: 0.05, statusRecebimento: ReceiptStatus.Nao, statusVenda: SaleStatus.Escritura, dataVenda: '20/10/2025', dataRecebimento: '30/10/2025', telefone: '21 92222-2222', email: 'maria.o@email.com', lembreteAtivo: false },
+  { id: 's3', imovel: 'TERRENO-LAGO-3', cliente: 'Carlos Pereira', valorVenda: 300000, comissao: 15000, percentualComissao: 0.05, statusRecebimento: ReceiptStatus.Sim, statusVenda: SaleStatus.Vendido, dataVenda: '05/11/2025', dataRecebimento: '10/11/2025', email: 'carlos.p@email.com', lembreteAtivo: false },
+  { id: 's4', imovel: 'SITIO-MONTANHA-7', cliente: 'Investimentos XYZ', valorVenda: 1200000, comissao: 60000, percentualComissao: 0.05, statusRecebimento: ReceiptStatus.Nao, statusVenda: SaleStatus.Financiamento, dataVenda: '15/11/2025', dataRecebimento: '25/11/2025', lembreteAtivo: false },
+  { id: 's5', imovel: 'APTO-LUXO-101', cliente: 'Ana Costa', valorVenda: 1800000, comissao: 90000, percentualComissao: 0.05, statusRecebimento: ReceiptStatus.Nao, statusVenda: SaleStatus.Proposta, dataVenda: '10/12/2025', dataRecebimento: '20/12/2025', telefone: '31 93333-3333', lembreteAtivo: false },
+  { id: 's6', imovel: 'COBERTURA-VISTA', cliente: 'Pedro Martins', valorVenda: 2500000, comissao: 125000, percentualComissao: 0.05, statusRecebimento: ReceiptStatus.Nao, statusVenda: SaleStatus.Proposta, dataVenda: '05/01/2026', dataRecebimento: '30/01/2026', telefone: '41 94444-4444', email: 'pedro.m@email.com', lembreteAtivo: false },
+];

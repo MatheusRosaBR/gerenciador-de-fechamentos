@@ -1,0 +1,5 @@
+{
+  "name": "Dashboard de Fechamentos de Locação",
+  "description": "Um aplicativo para acompanhamento de metas e gestão financeira de contratos de locação imobiliária, visualizando dados de uma planilha.",
+  "requestFramePermissions": []
+}
