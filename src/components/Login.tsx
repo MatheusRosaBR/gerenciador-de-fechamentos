@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { LockClosedIcon, EnvelopeIcon, PhoneIcon, EyeIcon, EyeSlashIcon, ChartPieIcon, CheckCircleIcon, UserIcon } from './IconComponents';
+import LegalDocs from './LegalDocs';
 
 interface LoginProps {
     onLoginSuccess: () => void;
@@ -62,6 +63,17 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     const [isSignUp, setIsSignUp] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
+    // LGPD State
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [acceptedComms, setAcceptedComms] = useState(false);
+    const [legalDocsOpen, setLegalDocsOpen] = useState(false);
+    const [legalDocsTab, setLegalDocsTab] = useState<'terms' | 'privacy'>('terms');
+
+    const handleOpenLegal = (tab: 'terms' | 'privacy') => {
+        setLegalDocsTab(tab);
+        setLegalDocsOpen(true);
+    };
+
     const formatPhone = (value: string) => {
         // Remove non-digit characters
         let numbers = value.replace(/\D/g, '');
@@ -109,6 +121,11 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                 setLoading(false);
                 return;
             }
+            if (!acceptedTerms) {
+                setError('Você precisa aceitar os Termos de Uso e Política de Privacidade.');
+                setLoading(false);
+                return;
+            }
         }
 
         try {
@@ -120,6 +137,8 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                         data: {
                             full_name: name, // Save name to metadata
                             phone: phone, // Save phone to user metadata
+                            accepted_terms_at: new Date().toISOString(),
+                            accepted_comms: acceptedComms
                         }
                     }
                 });
@@ -282,6 +301,42 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                             </div>
                         )}
 
+                        {isSignUp && (
+                            <div className="animate-fade-in-down space-y-3 pt-2">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex items-center h-5">
+                                        <input
+                                            id="terms"
+                                            name="terms"
+                                            type="checkbox"
+                                            checked={acceptedTerms}
+                                            onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                            className="h-4 w-4 text-brand-accent focus:ring-brand-accent border-[var(--color-border)] rounded bg-[var(--color-bg-muted)] cursor-pointer"
+                                        />
+                                    </div>
+                                    <label htmlFor="terms" className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                                        Li e aceito os <button type="button" onClick={() => handleOpenLegal('terms')} className="text-brand-accent hover:underline font-medium">Termos de Uso</button> e a <button type="button" onClick={() => handleOpenLegal('privacy')} className="text-brand-accent hover:underline font-medium">Política de Privacidade</button>.
+                                    </label>
+                                </div>
+
+                                <div className="flex items-start gap-3">
+                                    <div className="flex items-center h-5">
+                                        <input
+                                            id="comms"
+                                            name="comms"
+                                            type="checkbox"
+                                            checked={acceptedComms}
+                                            onChange={(e) => setAcceptedComms(e.target.checked)}
+                                            className="h-4 w-4 text-brand-accent focus:ring-brand-accent border-[var(--color-border)] rounded bg-[var(--color-bg-muted)] cursor-pointer"
+                                        />
+                                    </div>
+                                    <label htmlFor="comms" className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                                        (Opcional) Aceito receber novidades, dicas e comunicações sobre a plataforma via E-mail ou WhatsApp.
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
                         {error && (
                             <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-500 text-sm animate-shake text-center">
                                 {error}
@@ -324,7 +379,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+            <LegalDocs isOpen={legalDocsOpen} onClose={() => setLegalDocsOpen(false)} initialTab={legalDocsTab} />
+        </div >
     );
 };
 
