@@ -13,6 +13,11 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
     },
     plugins: [react()],
+    define: {
+      // Fix for reference errors in production
+      'process.env': {},
+      '__DEFINES__': JSON.stringify({})
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
