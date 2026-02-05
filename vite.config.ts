@@ -18,7 +18,14 @@ export default defineConfig(({ mode }) => {
       'process.env': {},
       '__DEFINES__': JSON.stringify({}),
       '__HMR_CONFIG_NAME__': JSON.stringify(''),
-      '__BASE__': JSON.stringify('/')
+      '__BASE__': JSON.stringify('/'),
+      '__SERVER_HOST__': JSON.stringify('localhost'),
+      '__HMR_PORT__': JSON.stringify(null),
+      '__HMR_HOSTNAME__': JSON.stringify(null),
+      '__HMR_DIRECT_TARGET__': JSON.stringify(''),
+      '__HMR_BASE__': JSON.stringify('/'),
+      '__HMR_TIMEOUT__': JSON.stringify(5000),
+      '__HMR_ENABLE_OVERLAY__': JSON.stringify(false),
     },
     resolve: {
       alias: {
