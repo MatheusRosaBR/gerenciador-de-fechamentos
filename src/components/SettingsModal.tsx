@@ -74,17 +74,22 @@ const ContentPanel: React.FC<{ tabName: ActiveTab; title: string; children: Reac
   </div>
 );
 
-const ProfileInputField: React.FC<{ id: string; label: string; type: string; value: string; name: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }> = ({ id, label, type, value, name, onChange }) => (
-  <div>
+const ProfileInputField: React.FC<{ id: string; label: string; type: string; value: string; name: string; disabled?: boolean; readOnly?: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; children?: React.ReactNode }> = ({ id, label, type, value, name, disabled, readOnly, onChange, children }) => (
+  <div className="relative">
     <label htmlFor={id} className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">{label}</label>
-    <input
-      type={type}
-      id={id}
-      name={name}
-      value={value}
-      onChange={onChange}
-      className="w-full bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-md p-2.5 text-[var(--color-text-primary)] focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-colors"
-    />
+    <div className="flex gap-2">
+      <input
+        type={type}
+        id={id}
+        name={name}
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        readOnly={readOnly}
+        className={`w-full bg-[var(--color-bg-surface)] border border-[var(--color-border)] rounded-md p-2.5 text-[var(--color-text-primary)] transition-colors ${disabled || readOnly ? 'opacity-60 cursor-not-allowed' : 'focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent'}`}
+      />
+      {children}
+    </div>
   </div>
 );
 
@@ -92,6 +97,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, profileD
   useLockBodyScroll();
   const [activeTab, setActiveTab] = useState<ActiveTab>('perfil');
   const [formData, setFormData] = useState<ProfileData>(profileData);
+  const [isPhoneEditing, setIsPhoneEditing] = useState(false);
 
   // Cropper State
   const [isCropperOpen, setIsCropperOpen] = useState(false);
@@ -392,10 +398,27 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, profileD
                   </div>
 
                   {/* Profile Form Section */}
+                  {/* Profile Form Section */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <ProfileInputField id="name" name="name" label="Nome de usuário" type="text" value={formData.name} onChange={handleProfileChange} />
-                    <ProfileInputField id="email" name="email" label="E-mail" type="email" value={formData.email} onChange={handleProfileChange} />
-                    <ProfileInputField id="phone" name="phone" label="Telefone" type="tel" value={formData.phone} onChange={handleProfileChange} />
+                    <ProfileInputField id="email" name="email" label="E-mail" type="email" value={formData.email} onChange={handleProfileChange} disabled={true} />
+                    <ProfileInputField
+                      id="phone"
+                      name="phone"
+                      label="Telefone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleProfileChange}
+                      disabled={!isPhoneEditing}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setIsPhoneEditing(!isPhoneEditing)}
+                        className="text-xs text-brand-accent hover:text-brand-accent/80 font-medium whitespace-nowrap px-3 py-1 bg-brand-accent/10 hover:bg-brand-accent/20 rounded-md transition-colors h-full flex items-center"
+                      >
+                        {isPhoneEditing ? 'Cancelar' : 'Alterar Telefone'}
+                      </button>
+                    </ProfileInputField>
                   </div>
 
                   {/* Password & Security Section */}
