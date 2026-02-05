@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => {
       '__HMR_BASE__': JSON.stringify('/'),
       '__HMR_TIMEOUT__': JSON.stringify(5000),
       '__HMR_ENABLE_OVERLAY__': JSON.stringify(false),
+      '__HMR_PROTOCOL__': JSON.stringify(null),
     },
     resolve: {
       alias: {
