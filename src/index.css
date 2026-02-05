@@ -1,10 +1,12 @@
 /* Global Styles */
 body {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease, color 0.3s ease;
+  letter-spacing: -0.01em;
+  /* Tighter tracking for professional look */
 }
 
 /* Custom Scrollbar */
@@ -54,6 +56,7 @@ body {
   opacity: 0;
   transform: scale(0.9);
 }
+
 .fade-enter-active {
   opacity: 1;
   transform: translateX(0);
@@ -61,12 +64,13 @@ body {
 }
 
 /* Remove arrows/spinners from number inputs */
-input[type=number]::-webkit-inner-spin-button, 
-input[type=number]::-webkit-outer-spin-button { 
-  -webkit-appearance: none; 
-  margin: 0; 
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 input[type=number] {
-  -moz-appearance: textfield; /* Firefox */
+  -moz-appearance: textfield;
+  /* Firefox */
 }

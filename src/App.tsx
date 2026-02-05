@@ -37,6 +37,42 @@ import { useContracts } from './hooks/useContracts';
 import { useSales } from './hooks/useSales';
 
 type View = 'locacao' | 'vendas';
+import OnboardingTour, { TourStep } from './components/OnboardingTour';
+
+// Onboarding Steps Definition
+const TOUR_STEPS: TourStep[] = [
+  {
+    targetId: 'btn-add-new',
+    title: 'Cadastre Novos Contratos',
+    description: 'Clique aqui para registrar suas vendas ou locações. É rápido e fácil.',
+    position: 'left'
+  },
+  {
+    targetId: 'card-goal',
+    title: 'Defina suas Metas',
+    description: 'Acompanhe seu progresso! Clique na engrenagem dentro do card para definir sua meta mensal.',
+    position: 'bottom'
+  },
+  {
+    targetId: 'tabs-view',
+    title: 'Vendas e Locação',
+    description: 'Alterne entre suas visões de Venda e Locação aqui. Cada um tem seus próprios dados.',
+    position: 'bottom'
+  },
+  {
+    targetId: 'btn-profile',
+    title: 'Seu Perfil e Temas',
+    description: 'Acesse suas configurações, mude sua foto e escolha entre diversos temas coloridos!',
+    position: 'left'
+  },
+  {
+    targetId: 'btn-help',
+    title: 'Precisa de Ajuda?',
+    description: 'Nossa central de ajuda tem guias passo-a-passo para você tirar todas as dúvidas.',
+    position: 'bottom'
+  }
+];
+
 const REMINDER_THRESHOLD_DAYS = 3;
 
 const initialProfileData = {
@@ -238,6 +274,22 @@ const App: React.FC = () => {
 
   // State for Help Modal
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+
+  // State for Onboarding Tour
+  const [isOnboardingTourOpen, setIsOnboardingTourOpen] = useState(false);
+
+  // Effect to check if user has seen onboarding
+  useEffect(() => {
+    // Only show if we have a session (user is logged in)
+    if (session) {
+      const hasSeen = localStorage.getItem('hasSeenOnboarding');
+      if (!hasSeen) {
+        // Small delay to ensure UI is loaded
+        const timer = setTimeout(() => setIsOnboardingTourOpen(true), 1500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [session]);
 
   // State for Mobile Menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -593,6 +645,7 @@ const App: React.FC = () => {
             <div className="hidden md:flex items-center gap-2">
               <ReminderPopup reminders={reminders} onSelectReminder={handleSelectReminder} />
               <button
+                id="btn-help"
                 onClick={() => setIsHelpModalOpen(true)}
                 className="text-[var(--color-text-secondary)] hover:text-brand-accent transition-colors p-2 rounded-full hover:bg-[var(--color-bg-surface)]/50"
                 aria-label="Ajuda"
@@ -600,6 +653,7 @@ const App: React.FC = () => {
                 <QuestionMarkCircleIcon className="w-6 h-6" />
               </button>
               <button
+                id="btn-profile"
                 onClick={() => setIsSettingsModalOpen(true)}
                 className="text-[var(--color-text-secondary)] hover:text-brand-accent transition-colors p-2 rounded-full hover:bg-[var(--color-bg-surface)]/50"
                 aria-label="Configurações da plataforma"
@@ -607,6 +661,7 @@ const App: React.FC = () => {
                 <CogIcon className="w-6 h-6" />
               </button>
               <button
+                id="btn-add-new"
                 onClick={() => activeView === 'locacao' ? setIsAddContractModalOpen(true) : setIsAddSaleModalOpen(true)}
                 className="bg-brand-accent hover:bg-opacity-90 text-[var(--color-text-accent)] font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-violet-500/30"
                 aria-label="Adicionar novo"
@@ -671,7 +726,7 @@ const App: React.FC = () => {
 
       <main className="container mx-auto p-4 md:p-6">
         <div className="mb-6 flex flex-col md:flex-row items-stretch justify-between gap-4">
-          <div className="w-full md:max-w-md p-2 flex items-center justify-center gap-2 bg-[var(--color-bg-surface)] rounded-2xl shadow-sm border border-[var(--color-border)] h-full">
+          <div id="tabs-view" className="w-full md:max-w-md p-2 flex items-center justify-center gap-2 bg-[var(--color-bg-surface)] rounded-2xl shadow-sm border border-[var(--color-border)] h-full">
             <TabButton view="locacao" label="Locação" />
             <TabButton view="vendas" label="Vendas" />
           </div>
@@ -956,6 +1011,18 @@ const App: React.FC = () => {
           animation: fade-in-down 0.2s ease-out forwards;
         }
       `}</style>
+      <OnboardingTour
+        steps={TOUR_STEPS}
+        isOpen={isOnboardingTourOpen}
+        onClose={() => {
+          setIsOnboardingTourOpen(false);
+          localStorage.setItem('hasSeenOnboarding', 'true');
+        }}
+        onComplete={() => {
+          setIsOnboardingTourOpen(false);
+          localStorage.setItem('hasSeenOnboarding', 'true');
+        }}
+      />
     </div >
   );
 };

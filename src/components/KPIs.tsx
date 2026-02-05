@@ -40,7 +40,7 @@ const KPICard: React.FC<{
 );
 
 const ProgressCard: React.FC<{ meta: number; realizado: number; progress: number; period: string; onOpenSettings: () => void }> = ({ meta, realizado, progress, period, onOpenSettings }) => (
-  <div className="glass-card p-5 rounded-lg flex flex-col justify-between h-full relative overflow-hidden">
+  <div id="card-goal" className="glass-card p-5 rounded-lg flex flex-col justify-between h-full relative overflow-hidden">
     <div className="absolute top-0 right-0 p-3 opacity-10">
       <TargetIcon className="w-24 h-24 rotate-12" />
     </div>
