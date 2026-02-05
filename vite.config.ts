@@ -16,7 +16,8 @@ export default defineConfig(({ mode }) => {
     define: {
       // Fix for reference errors in production
       'process.env': {},
-      '__DEFINES__': JSON.stringify({})
+      '__DEFINES__': JSON.stringify({}),
+      '__HMR_CONFIG_NAME__': JSON.stringify('')
     },
     resolve: {
       alias: {
