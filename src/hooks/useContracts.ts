@@ -13,7 +13,7 @@ export const useContracts = (session: any) => {
         setError(null);
         try {
             const { data, error } = await supabase
-                .from('contracts')
+                .from('Contracts')
                 .select('*')
                 .order('created_at', { ascending: false });
 
@@ -69,7 +69,7 @@ export const useContracts = (session: any) => {
             };
 
             const { data, error } = await supabase
-                .from('contracts')
+                .from('Contracts')
                 .insert([dbData])
                 .select()
                 .single();
@@ -127,7 +127,7 @@ export const useContracts = (session: any) => {
             if (updates.comissaoLiquida !== undefined) dbUpdates.comissao_liquida = updates.comissaoLiquida;
 
             const { error } = await supabase
-                .from('contracts')
+                .from('Contracts')
                 .update(dbUpdates)
                 .eq('id', id);
 
@@ -148,7 +148,7 @@ export const useContracts = (session: any) => {
         setLoading(true);
         try {
             const { error } = await supabase
-                .from('contracts')
+                .from('Contracts')
                 .delete()
                 .eq('id', id);
 

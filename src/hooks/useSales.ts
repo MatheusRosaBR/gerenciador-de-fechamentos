@@ -13,7 +13,7 @@ export const useSales = (session: any) => {
         setError(null);
         try {
             const { data, error } = await supabase
-                .from('sales')
+                .from('Sales')
                 .select('*')
                 .order('created_at', { ascending: false });
 
@@ -69,7 +69,7 @@ export const useSales = (session: any) => {
             };
 
             const { data, error } = await supabase
-                .from('sales')
+                .from('Sales')
                 .insert([dbData])
                 .select()
                 .single();
@@ -126,7 +126,7 @@ export const useSales = (session: any) => {
             if (updates.comissaoLiquida !== undefined) dbUpdates.comissao_liquida = updates.comissaoLiquida;
 
             const { error } = await supabase
-                .from('sales')
+                .from('Sales')
                 .update(dbUpdates)
                 .eq('id', id);
 
@@ -147,7 +147,7 @@ export const useSales = (session: any) => {
         setLoading(true);
         try {
             const { error } = await supabase
-                .from('sales')
+                .from('Sales')
                 .delete()
                 .eq('id', id);
 
