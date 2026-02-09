@@ -49,11 +49,32 @@ const ClosingsByMonthChart: React.FC<ClosingsByMonthChartProps> = ({ items }) =>
     return `${month}/${year}`;
   };
 
+  const parseFlexibleDate = (dateString: string): Date | null => {
+    if (!dateString) return null;
+
+    // Try ISO format first (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const date = new Date(dateString);
+      if (!isNaN(date.getTime())) return date;
+    }
+
+    // Try DD/MM/YYYY format
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      const [day, month, year] = dateString.split('/').map(Number);
+      const date = new Date(year, month - 1, day);
+      if (date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day) {
+        return date;
+      }
+    }
+
+    return null;
+  };
+
   const data = items.reduce((acc, item) => {
     const dateString = item.formalizacao || item.dataVenda;
     if (!dateString) return acc;
 
-    const date = parseDateString(dateString);
+    const date = parseFlexibleDate(dateString);
     if (!date) return acc;
 
     const monthYear = formatDateToMonthYear(date);
