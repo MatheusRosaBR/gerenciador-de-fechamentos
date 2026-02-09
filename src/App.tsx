@@ -115,11 +115,16 @@ const App: React.FC = () => {
             };
           }
 
+          // Preserve customizations from localStorage (avatar, name)
+          // Only update email and phone from session if they changed
           return {
             ...prev,
-            name: session.user.user_metadata.full_name || prev.name,
+            // Keep custom name if it exists and is different from default
+            name: prev.name && prev.name !== initialProfileData.name ? prev.name : (session.user.user_metadata.full_name || prev.name),
             email: session.user.email || prev.email,
-            phone: session.user.user_metadata.phone || prev.phone
+            phone: session.user.user_metadata.phone || prev.phone,
+            // Always preserve avatar from localStorage
+            avatar: prev.avatar
           };
         });
       } else {
