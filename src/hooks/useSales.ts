@@ -52,17 +52,17 @@ export const useSales = (session: any) => {
         try {
             const dbData = {
                 user_id: session.user.id,
-                imovel: sale.imovel,
+                imovel: sale.imovel || null,
                 cliente: sale.cliente,
                 valor_venda: sale.valorVenda,
                 comissao: sale.comissao,
                 percentual_comissao: sale.percentualComissao,
                 status_recebimento: sale.statusRecebimento,
                 status_venda: sale.statusVenda,
-                data_venda: sale.dataVenda,
-                data_recebimento: sale.dataRecebimento,
-                telefone: sale.telefone,
-                email: sale.email,
+                data_venda: sale.dataVenda || null,
+                data_recebimento: sale.dataRecebimento || null,
+                telefone: sale.telefone || null,
+                email: sale.email || null,
                 lembrete_ativo: sale.lembreteAtivo,
                 aliquota_imposto: sale.aliquotaImposto,
                 comissao_liquida: sale.comissaoLiquida

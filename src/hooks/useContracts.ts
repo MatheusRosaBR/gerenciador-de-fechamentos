@@ -52,17 +52,17 @@ export const useContracts = (session: any) => {
         try {
             const dbData = {
                 user_id: session.user.id,
-                imovel: contract.imovel,
+                imovel: contract.imovel || null,
                 cliente: contract.cliente,
                 valor_locacao: contract.valorLocacao,
                 comissao: contract.comissao,
                 percentual_comissao: contract.percentualComissao,
                 status_recebimento: contract.statusRecebimento,
                 status_contrato: contract.statusContrato,
-                formalizacao: contract.formalizacao,
-                data_recebimento: contract.dataRecebimento,
-                telefone: contract.telefone,
-                email: contract.email,
+                formalizacao: contract.formalizacao || null,
+                data_recebimento: contract.dataRecebimento || null,
+                telefone: contract.telefone || null,
+                email: contract.email || null,
                 lembrete_ativo: contract.lembreteAtivo,
                 aliquota_imposto: contract.aliquotaImposto,
                 comissao_liquida: contract.comissaoLiquida
