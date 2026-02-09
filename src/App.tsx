@@ -955,13 +955,17 @@ const App: React.FC = () => {
       <OnboardingTour
         steps={TOUR_STEPS}
         isOpen={isOnboardingTourOpen}
-        onClose={() => {
+        onClose={async () => {
           setIsOnboardingTourOpen(false);
-          localStorage.setItem('hasSeenOnboarding', 'true');
+          if (profile) {
+            await updateProfile({ has_seen_onboarding: true });
+          }
         }}
-        onComplete={() => {
+        onComplete={async () => {
           setIsOnboardingTourOpen(false);
-          localStorage.setItem('hasSeenOnboarding', 'true');
+          if (profile) {
+            await updateProfile({ has_seen_onboarding: true });
+          }
         }}
       />
     </div >
