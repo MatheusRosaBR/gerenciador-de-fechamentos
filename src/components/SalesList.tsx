@@ -1,6 +1,6 @@
 import React from 'react';
 import { SaleContract, ReceiptStatus, SaleStatus } from '../types';
-import { formatCurrencyBRL } from '../utils/formatters';
+import { formatCurrencyBRL, formatDateFromISO } from '../utils/formatters';
 import { PDFReportGenerator } from '../utils/PDFReportGenerator';
 import { HomeIcon, UserIcon, PencilIcon, TrashIcon, ArrowDownTrayIcon } from './IconComponents';
 import Pagination from './Pagination';
@@ -182,7 +182,8 @@ const SalesList: React.FC<SalesListProps> = ({
                     {sale.statusRecebimento === ReceiptStatus.Sim ? 'Recebido' : 'Pendente'}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-sm text-[var(--color-text-secondary)] hidden lg:table-cell whitespace-nowrap">{sale.dataVenda || 'N/A'}</td>
+                <td className="px-5 py-3 text-sm text-[var(--color-text-secondary)] hidden lg:table-cell whitespace-nowrap">{formatDateFromISO(sale.dataVenda) || 'N/A'}</td>
+                <td className="px-5 py-3 text-sm text-[var(--color-text-secondary)] hidden lg:table-cell whitespace-nowrap">{formatDateFromISO(sale.dataRecebimento) || 'N/A'}</td>
                 {isEditMode && (
                   <td className="px-5 py-3 text-sm">
                     <div className="flex items-center gap-2">

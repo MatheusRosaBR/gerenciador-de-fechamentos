@@ -1,6 +1,6 @@
 import React from 'react';
 import { Contract, ReceiptStatus } from '../types';
-import { formatCurrencyBRL, formatDateForGoogleCalendar } from '../utils/formatters';
+import { formatCurrencyBRL, formatDateForGoogleCalendar, formatDateFromISO } from '../utils/formatters';
 import { XIcon, HomeIcon, UserIcon, CalendarIcon, CurrencyDollarIcon, CollectionIcon, ChartPieIcon, DocumentTextIcon, PhoneIcon, MailIcon, CalendarPlusIcon, BellIcon } from './IconComponents';
 
 interface ContractDetailModalProps {
@@ -64,7 +64,7 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
           <DetailItem icon={<CollectionIcon className="w-5 h-5" />} label="Comissão" value={formatCurrencyBRL(contract.comissao)} />
           <DetailItem icon={<ChartPieIcon className="w-5 h-5" />} label="% Comissão" value={`${(contract.percentualComissao * 100).toFixed(1)}%`} />
           <DetailItem icon={<DocumentTextIcon className="w-5 h-5" />} label="Status do Contrato" value={contract.statusContrato} />
-          <DetailItem icon={<CalendarIcon className="w-5 h-5" />} label="Data Formalização" value={contract.formalizacao || 'Pendente'}>
+          <DetailItem icon={<CalendarIcon className="w-5 h-5" />} label="Data Formalização" value={formatDateFromISO(contract.formalizacao) || 'Pendente'}>
             {contract.formalizacao && (
               <button
                 onClick={(e) => handleAddToCalendar(e, contract.formalizacao, `Formalização Contrato: ${contract.cliente} - Imóvel ${contract.imovel}`, `Formalização do contrato de locação para o imóvel ${contract.imovel} com o cliente ${contract.cliente}.\nValor: ${formatCurrencyBRL(contract.valorLocacao)}`)}
@@ -75,7 +75,7 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
               </button>
             )}
           </DetailItem>
-          <DetailItem icon={<CalendarIcon className="w-5 h-5" />} label="Previsão Recebimento" value={contract.dataRecebimento || 'Pendente'}>
+          <DetailItem icon={<CalendarIcon className="w-5 h-5" />} label="Previsão Recebimento" value={formatDateFromISO(contract.dataRecebimento) || 'Pendente'}>
             {contract.dataRecebimento && (
               <button
                 onClick={(e) => handleAddToCalendar(e, contract.dataRecebimento, `Recebimento Comissão: ${contract.cliente} - Imóvel ${contract.imovel}`, `Recebimento da comissão (${formatCurrencyBRL(contract.comissao)}) referente ao contrato de locação para o imóvel ${contract.imovel} com o cliente ${contract.cliente}.`)}
@@ -95,8 +95,8 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
               <button
                 onClick={() => handleStatusChange(ReceiptStatus.Sim)}
                 className={`flex-1 py-3 px-4 text-sm font-bold rounded-md transition-all duration-200 border-2 ${contract.statusRecebimento === ReceiptStatus.Sim
-                    ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20'
-                    : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-green-500/20 hover:border-green-500'
+                  ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20'
+                  : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-green-500/20 hover:border-green-500'
                   }`}
               >
                 Recebido
@@ -104,8 +104,8 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
               <button
                 onClick={() => handleStatusChange(ReceiptStatus.Nao)}
                 className={`flex-1 py-3 px-4 text-sm font-bold rounded-md transition-all duration-200 border-2 ${contract.statusRecebimento === ReceiptStatus.Nao
-                    ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20'
-                    : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-red-500/20 hover:border-red-500'
+                  ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20'
+                  : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-red-500/20 hover:border-red-500'
                   }`}
               >
                 Pendente
@@ -118,8 +118,8 @@ const ContractDetailModal: React.FC<ContractDetailModalProps> = ({ contract, onC
               <button
                 onClick={() => onToggleReminder(contract.id)}
                 className={`w-full py-3 px-4 text-sm font-bold rounded-md transition-all duration-200 border-2 flex items-center justify-center gap-2 ${contract.lembreteAtivo
-                    ? 'bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20'
-                    : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-sky-500/20 hover:border-sky-500'
+                  ? 'bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20'
+                  : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-sky-500/20 hover:border-sky-500'
                   }`}
               >
                 <BellIcon className="w-5 h-5" />

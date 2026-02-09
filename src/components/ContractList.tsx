@@ -1,6 +1,6 @@
 import React from 'react';
 import { Contract, ReceiptStatus, ContractStatus } from '../types';
-import { formatCurrencyBRL } from '../utils/formatters';
+import { formatCurrencyBRL, formatDateFromISO } from '../utils/formatters';
 import { PDFReportGenerator } from '../utils/PDFReportGenerator';
 import { HomeIcon, UserIcon, PencilIcon, TrashIcon, ArrowDownTrayIcon } from './IconComponents';
 import Pagination from './Pagination';
@@ -183,8 +183,8 @@ const ContractList: React.FC<ContractListProps> = ({
                     {contract.statusRecebimento === ReceiptStatus.Sim ? 'Recebido' : 'Pendente'}
                   </span>
                 </td>
-                <td className="px-5 py-3 text-sm text-[var(--color-text-secondary)] hidden lg:table-cell whitespace-nowrap">{contract.formalizacao || 'N/A'}</td>
-                <td className="px-5 py-3 text-sm text-[var(--color-text-secondary)] hidden lg:table-cell whitespace-nowrap">{contract.dataRecebimento || 'N/A'}</td>
+                <td className="px-5 py-3 text-sm text-[var(--color-text-secondary)] hidden lg:table-cell whitespace-nowrap">{formatDateFromISO(contract.formalizacao) || 'N/A'}</td>
+                <td className="px-5 py-3 text-sm text-[var(--color-text-secondary)] hidden lg:table-cell whitespace-nowrap">{formatDateFromISO(contract.dataRecebimento) || 'N/A'}</td>
                 {isEditMode && (
                   <td className="px-5 py-3 text-sm">
                     <div className="flex items-center gap-2">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { SaleContract, ReceiptStatus } from '../types';
-import { formatCurrencyBRL, formatDateForGoogleCalendar } from '../utils/formatters';
+import { formatCurrencyBRL, formatDateForGoogleCalendar, formatDateFromISO } from '../utils/formatters';
 import { XIcon, HomeIcon, UserIcon, CalendarIcon, CurrencyDollarIcon, CollectionIcon, ChartPieIcon, DocumentTextIcon, PhoneIcon, MailIcon, CalendarPlusIcon, BellIcon } from './IconComponents';
 
 interface SaleDetailModalProps {
@@ -64,7 +64,7 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({ sale, onClose, onUpda
           <DetailItem icon={<CollectionIcon className="w-5 h-5" />} label="Comissão" value={formatCurrencyBRL(sale.comissao)} />
           <DetailItem icon={<ChartPieIcon className="w-5 h-5" />} label="% Comissão" value={`${(sale.percentualComissao * 100).toFixed(2)}%`} />
           <DetailItem icon={<DocumentTextIcon className="w-5 h-5" />} label="Status da Venda" value={sale.statusVenda} />
-          <DetailItem icon={<CalendarIcon className="w-5 h-5" />} label="Data da Venda" value={sale.dataVenda || 'Pendente'}>
+          <DetailItem icon={<CalendarIcon className="w-5 h-5" />} label="Data da Venda" value={formatDateFromISO(sale.dataVenda) || 'Pendente'}>
             {sale.dataVenda && (
               <button
                 onClick={(e) => handleAddToCalendar(e, sale.dataVenda, `Venda Imóvel: ${sale.cliente} - ${sale.imovel}`, `Venda do imóvel ${sale.imovel} para o cliente ${sale.cliente}.\nValor: ${formatCurrencyBRL(sale.valorVenda)}`)}
@@ -75,7 +75,7 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({ sale, onClose, onUpda
               </button>
             )}
           </DetailItem>
-          <DetailItem icon={<CalendarIcon className="w-5 h-5" />} label="Previsão Recebimento" value={sale.dataRecebimento || 'Pendente'}>
+          <DetailItem icon={<CalendarIcon className="w-5 h-5" />} label="Previsão Recebimento" value={formatDateFromISO(sale.dataRecebimento) || 'Pendente'}>
             {sale.dataRecebimento && (
               <button
                 onClick={(e) => handleAddToCalendar(e, sale.dataRecebimento, `Recebimento Comissão: ${sale.cliente} - ${sale.imovel}`, `Recebimento da comissão (${formatCurrencyBRL(sale.comissao)}) referente à venda do imóvel ${sale.imovel} para o cliente ${sale.cliente}.`)}
@@ -95,8 +95,8 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({ sale, onClose, onUpda
               <button
                 onClick={() => handleStatusChange(ReceiptStatus.Sim)}
                 className={`flex-1 py-3 px-4 text-sm font-bold rounded-md transition-all duration-200 border-2 ${sale.statusRecebimento === ReceiptStatus.Sim
-                    ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20'
-                    : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-green-500/20 hover:border-green-500'
+                  ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20'
+                  : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-green-500/20 hover:border-green-500'
                   }`}
               >
                 Recebido
@@ -104,8 +104,8 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({ sale, onClose, onUpda
               <button
                 onClick={() => handleStatusChange(ReceiptStatus.Nao)}
                 className={`flex-1 py-3 px-4 text-sm font-bold rounded-md transition-all duration-200 border-2 ${sale.statusRecebimento === ReceiptStatus.Nao
-                    ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20'
-                    : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-red-500/20 hover:border-red-500'
+                  ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20'
+                  : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-red-500/20 hover:border-red-500'
                   }`}
               >
                 Pendente
@@ -118,8 +118,8 @@ const SaleDetailModal: React.FC<SaleDetailModalProps> = ({ sale, onClose, onUpda
               <button
                 onClick={() => onToggleReminder(sale.id)}
                 className={`w-full py-3 px-4 text-sm font-bold rounded-md transition-all duration-200 border-2 flex items-center justify-center gap-2 ${sale.lembreteAtivo
-                    ? 'bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20'
-                    : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-sky-500/20 hover:border-sky-500'
+                  ? 'bg-sky-500 border-sky-500 text-white shadow-lg shadow-sky-500/20'
+                  : 'bg-transparent border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-sky-500/20 hover:border-sky-500'
                   }`}
               >
                 <BellIcon className="w-5 h-5" />
