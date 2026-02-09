@@ -7,4 +7,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
     console.warn('Supabase credentials missing in .env file');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
+    auth: {
+        storage: window.sessionStorage, // Session expires when browser closes
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true
+    }
+});
