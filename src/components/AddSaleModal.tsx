@@ -20,7 +20,6 @@ const InputField: React.FC<{
   type?: string;
   placeholder?: string;
   required?: boolean;
-  required?: boolean;
 }> = ({ label, name, value, onChange, error, type = 'text', placeholder, required }) => (
   <div className="relative">
     <label htmlFor={name} className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
@@ -119,6 +118,8 @@ const AddSaleModal: React.FC<AddSaleModalProps> = ({ onClose, onAddSale }) => {
         valorVenda: parseCurrency(formData.valorVenda),
         comissao: parseCurrency(formData.comissao),
         aliquotaImposto: parseFloat(formData.aliquotaImposto) || 0,
+        dataVenda: formatDateToISO(formData.dataVenda),
+        dataRecebimento: formatDateToISO(formData.dataRecebimento),
       });
     }
   };

@@ -20,7 +20,6 @@ const InputField: React.FC<{
   type?: string;
   placeholder?: string;
   required?: boolean;
-  required?: boolean;
 }> = ({ label, name, value, onChange, error, type = 'text', placeholder, required }) => (
   <div className="relative">
     <label htmlFor={name} className="block text-sm font-medium text-[var(--color-text-secondary)] mb-1">
@@ -119,6 +118,8 @@ const AddContractModal: React.FC<AddContractModalProps> = ({ onClose, onAddContr
         valorLocacao: parseCurrency(formData.valorLocacao),
         comissao: parseCurrency(formData.comissao),
         aliquotaImposto: parseFloat(formData.aliquotaImposto) || 0,
+        formalizacao: formatDateToISO(formData.formalizacao),
+        dataRecebimento: formatDateToISO(formData.dataRecebimento),
       });
     }
   };
