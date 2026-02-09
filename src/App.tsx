@@ -35,6 +35,7 @@ import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { useContracts } from './hooks/useContracts';
 import { useSales } from './hooks/useSales';
+import { useUserProfile } from './hooks/useUserProfile';
 
 type View = 'locacao' | 'vendas';
 import OnboardingTour, { TourStep } from './components/OnboardingTour';
@@ -83,14 +84,6 @@ const initialProfileData = {
   avatar: undefined,
 };
 
-const STORAGE_KEYS = {
-  // CONTRACTS: 'app_contracts_v2', // Deprecated
-  // SALES: 'app_sales_v2', // Deprecated
-  PROFILE: 'app_profile_v2',
-  RENTAL_GOAL: 'app_rental_goal_v2',
-  SALES_GOAL: 'app_sales_goal_v2',
-};
-
 const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -98,97 +91,49 @@ const App: React.FC = () => {
 
   // Auth Effect
   useEffect(() => {
-    const handleSession = (session: Session | null) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setAuthLoading(false);
-
-      if (session?.user) {
-        setProfileData(prev => {
-          const isDifferentUser = prev.email && prev.email !== session.user.email;
-
-          if (isDifferentUser) {
-            return {
-              ...initialProfileData,
-              name: session.user.user_metadata.full_name || initialProfileData.name,
-              email: session.user.email || initialProfileData.email,
-              phone: session.user.user_metadata.phone || initialProfileData.phone
-            };
-          }
-
-          // Preserve customizations from localStorage (avatar, name)
-          // Only update email and phone from session if they changed
-          return {
-            ...prev,
-            // Keep custom name if it exists and is different from default
-            name: prev.name && prev.name !== initialProfileData.name ? prev.name : (session.user.user_metadata.full_name || prev.name),
-            email: session.user.email || prev.email,
-            phone: session.user.user_metadata.phone || prev.phone,
-            // Always preserve avatar from localStorage
-            avatar: prev.avatar
-          };
-        });
-      } else {
-        setProfileData(initialProfileData);
-        setContracts([]);
-        setSales([]);
-      }
-    };
-
-    supabase.auth.getSession().then(({ data: { session } }) => handleSession(session));
+    });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => handleSession(session));
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
 
+  // Use UserProfile hook
+  const { profile, loading: profileLoading, updateProfile } = useUserProfile(session);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem(STORAGE_KEYS.PROFILE);
-    localStorage.removeItem(STORAGE_KEYS.RENTAL_GOAL);
-    localStorage.removeItem(STORAGE_KEYS.SALES_GOAL);
-    setProfileData(initialProfileData);
-    setContracts([]);
-    setSales([]);
   };
 
-  // State for User Profile
-  const [profileData, setProfileData] = useState(() => {
-    // Check if we have a session to decide whether to trust local storage
-    // But since session state often loads async, we might still grab from LS initially.
-    // However, to fix the specific bug of "new user sees old user data", clearing LS on logout is the key.
-    // We will keep this initialization but rely on handleLogout to keep it clean.
-    const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
-    return saved ? JSON.parse(saved as string) : initialProfileData;
-  });
+  // Derive profileData from database profile
+  const profileData = {
+    name: profile?.name || 'Corretor Pro',
+    email: session?.user?.email || 'corretor.pro@email.com',
+    phone: profile?.phone || '(11) 99999-8888',
+    twoFactorEnabled: profile?.two_factor_enabled || false,
+    avatar: profile?.avatar
+  };
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profileData));
-  }, [profileData]);
-
-  // State for Theme
-  const [activeTheme, setActiveTheme] = useState<Theme>(() => {
-    try {
-      const savedTheme = localStorage.getItem('app-theme-v4');
-      return savedTheme ? JSON.parse(savedTheme) : themes[0];
-    } catch (error) {
-      console.error("Failed to parse theme from localStorage", error);
-      return themes[0];
-    }
-  });
+  // Get theme from profile
+  const activeTheme = themes.find(t => t.name === profile?.theme_name) || themes[0];
 
   useEffect(() => {
     const root = document.documentElement;
     Object.entries(activeTheme.colors).forEach(([key, value]) => {
       root.style.setProperty(key, value);
     });
-    localStorage.setItem('app-theme-v4', JSON.stringify(activeTheme));
 
     // Set dynamic background and toggle Tailwind dark mode
     if (activeTheme.mode === 'dark') {
       root.classList.add('dark');
-      // Gradient: Top center glow of Midnight Blue fading into True Black
       document.body.style.backgroundImage = 'radial-gradient(circle at 50% -20%, #0f172a 0%, #000000 40%, #000000 100%)';
     } else {
       root.classList.remove('dark');
@@ -196,8 +141,21 @@ const App: React.FC = () => {
     }
   }, [activeTheme]);
 
-  const handleThemeChange = (theme: Theme) => {
-    setActiveTheme(theme);
+  const handleThemeChange = async (theme: Theme) => {
+    if (profile) {
+      await updateProfile({ theme_name: theme.name });
+    }
+  };
+
+  const handleProfileSave = async (data: typeof profileData) => {
+    if (profile) {
+      await updateProfile({
+        name: data.name,
+        phone: data.phone,
+        avatar: data.avatar,
+        two_factor_enabled: data.twoFactorEnabled
+      });
+    }
   };
 
   // Use Supabase Hooks
@@ -236,14 +194,9 @@ const App: React.FC = () => {
   const [rentalCurrentPage, setRentalCurrentPage] = useState(1);
   const [rentalItemsPerPage, setRentalItemsPerPage] = useState(20);
 
-  const [rentalGoal, setRentalGoal] = useState<number>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.RENTAL_GOAL);
-    return saved ? JSON.parse(saved) : 100;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.RENTAL_GOAL, JSON.stringify(rentalGoal));
-  }, [rentalGoal]);
+  // Get goals from profile
+  const rentalGoal = profile?.rental_goal || 100;
+  const salesGoal = profile?.sales_goal || 20;
 
   const [rentalGoalPeriod, setRentalGoalPeriod] = useState('');
 
@@ -255,15 +208,6 @@ const App: React.FC = () => {
   const [isSaleEditMode, setIsSaleEditMode] = useState(false);
   const [salesCurrentPage, setSalesCurrentPage] = useState(1);
   const [salesItemsPerPage, setSalesItemsPerPage] = useState(20);
-
-  const [salesGoal, setSalesGoal] = useState<number>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.SALES_GOAL);
-    return saved ? JSON.parse(saved) : 20;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SALES_GOAL, JSON.stringify(salesGoal));
-  }, [salesGoal]);
 
   const [salesGoalPeriod, setSalesGoalPeriod] = useState('');
 
@@ -285,16 +229,15 @@ const App: React.FC = () => {
 
   // Effect to check if user has seen onboarding
   useEffect(() => {
-    // Only show if we have a session (user is logged in)
-    if (session) {
-      const hasSeen = localStorage.getItem('hasSeenOnboarding');
-      if (!hasSeen) {
+    // Only show if we have a session and profile is loaded
+    if (session && profile && !profileLoading) {
+      if (!profile.has_seen_onboarding) {
         // Small delay to ensure UI is loaded
         const timer = setTimeout(() => setIsOnboardingTourOpen(true), 1500);
         return () => clearTimeout(timer);
       }
     }
-  }, [session]);
+  }, [session, profile, profileLoading]);
 
   // State for Mobile Menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -473,12 +416,14 @@ const App: React.FC = () => {
     setEditingGoalType(null);
   };
 
-  const handleSaveGoal = (goal: number, period: string) => {
+  const handleSaveGoal = async (goal: number, period: string) => {
+    if (!profile) return;
+
     if (editingGoalType === 'locacao') {
-      setRentalGoal(goal);
+      await updateProfile({ rental_goal: goal });
       setRentalGoalPeriod(period);
     } else if (editingGoalType === 'vendas') {
-      setSalesGoal(goal);
+      await updateProfile({ sales_goal: goal });
       setSalesGoalPeriod(period);
     }
     handleCloseGoalSettings();
@@ -516,13 +461,9 @@ const App: React.FC = () => {
   };
 
   // Handler for App Reset
-  const handleAppReset = useCallback(() => {
+  const handleAppReset = useCallback(async () => {
     // Reset business data states
     setActiveView('locacao');
-
-    // Do NOT reset profile or theme
-    // setProfileData(initialProfileData);
-    // setActiveTheme(themes[0]);
 
     setContracts([]);
     setSelectedContract(null);
@@ -532,7 +473,6 @@ const App: React.FC = () => {
     setIsRentalEditMode(false);
     setRentalCurrentPage(1);
     setRentalItemsPerPage(20);
-    setRentalGoal(100);
     setRentalGoalPeriod('');
 
     setSales([]);
@@ -543,24 +483,20 @@ const App: React.FC = () => {
     setIsSaleEditMode(false);
     setSalesCurrentPage(1);
     setSalesItemsPerPage(20);
-    setSalesGoal(20);
     setSalesGoalPeriod('');
 
     // Close any open modals
     setIsGoalModalOpen(false);
     setIsSettingsModalOpen(false);
 
-    // Remove specific keys, preserving profile and data (data is in DB now)
-    const keysToRemove = [
-      // STORAGE_KEYS.CONTRACTS, 
-      // STORAGE_KEYS.SALES,
-      STORAGE_KEYS.RENTAL_GOAL,
-      STORAGE_KEYS.SALES_GOAL
-    ];
-
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    // localStorage.removeItem(STORAGE_KEYS.PROFILE); // Preserve profile
-  }, []);
+    // Reset goals in database
+    if (profile) {
+      await updateProfile({
+        rental_goal: 100,
+        sales_goal: 20
+      });
+    }
+  }, [profile, updateProfile]);
 
 
   const filteredContracts = useMemo(() => {
@@ -809,7 +745,7 @@ const App: React.FC = () => {
             isOpen={isSettingsModalOpen}
             onClose={() => setIsSettingsModalOpen(false)}
             profileData={profileData}
-            onProfileSave={setProfileData}
+            onProfileSave={handleProfileSave}
             activeTheme={activeTheme}
             onThemeChange={handleThemeChange}
             onAppReset={handleAppReset}

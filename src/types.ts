@@ -60,3 +60,19 @@ export interface ProfileData {
   twoFactorEnabled: boolean;
   avatar?: string; // Base64 encoded image
 }
+
+// Database-backed user profile
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  name: string;
+  avatar?: string;
+  phone: string;
+  rental_goal: number;
+  sales_goal: number;
+  theme_name: string;
+  has_seen_onboarding: boolean;
+  two_factor_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
